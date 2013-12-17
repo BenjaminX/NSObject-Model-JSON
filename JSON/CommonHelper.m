@@ -30,7 +30,7 @@
 //Real (private) init method
 - (id)initSingleton {
     self = [super init];
-    if ((self = [super init])) {
+    if (self) {
     }
     return self;
 }

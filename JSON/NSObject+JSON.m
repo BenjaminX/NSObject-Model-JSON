@@ -12,6 +12,7 @@
 #import "ObjectArray.h"
 #import "CommonHelper.h"
 
+#define TYPE_PREFIX @"@\""
 
 @implementation NSObject (JSON)
 
@@ -23,22 +24,6 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
     return obj;
 }
 
-+ (id)objectWithJSONObject:(id)jsonObj {
-    id objsArray = nil;
-    Class type = [self class];
-    
-    if ([jsonObj isKindOfClass:[NSArray class]]) {
-        ObjectArray *array = [ObjectArray arrayWithObjectType:type];
-        [array fillInJSONObject:jsonObj];
-        objsArray = array;
-    } else if([jsonObj isKindOfClass:[NSDictionary class]]) {
-        NSObject    *objItem = [[type alloc] init];
-        [objItem fillInJSONObject:jsonObj];
-        objsArray = objItem;
-    }
-    return objsArray;
-}
-
 - (void)fillInJSONObject:(NSDictionary *)jsonObj {
     Class class = [self class];
     NSArray *allKeys = [jsonObj allKeys];
@@ -46,18 +31,14 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
     for (NSString *key in allKeys) {
         objc_property_t property = class_getProperty(class, [key UTF8String]);
         if (property != nil) {
-            NSString *attribute = [NSString stringWithCString:property_getAttributes(property) encoding:NSUTF8StringEncoding];
-            
-            NSRange range = NSMakeRange(1, [attribute rangeOfString:@","].location - 1);
-            NSString *attrType = [attribute substringWithRange:range];
+            NSString *typeName = [self getTypeNameByAttribute:property];
             
             id value = [jsonObj objectForKey:key];
             id newValue = nil;
             
-            if ([attrType hasPrefix:@"@\""]) {
-                attrType = [attrType substringWithRange:NSMakeRange(2, [attrType length] - 3)];
+            if ([typeName hasPrefix:TYPE_PREFIX]) {
                 
-                Class class = NSClassFromString(attrType);
+                Class class = [self createObjectByTypeName:typeName];
                 
                 if ([class isSubclassOfClass:[NSDecimalNumber class]]) {
                     if ([value isKindOfClass:[NSDecimalNumber class]]) {
@@ -79,7 +60,6 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
                     }
                 } else if ([class isSubclassOfClass:[NSArray class]]) {
                     newValue = [self valueForKey:key];
-                    
                     if ([value isKindOfClass:[NSArray class]] && [newValue isKindOfClass:[ObjectArray class]]) {
                         [(ObjectArray *)newValue fillInJSONObject:value];
                     }
@@ -89,7 +69,7 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
                         [newValue fillInJSONObject:value];
                     }
                 }
-            } else if ([S_VALUE_TYPES rangeOfString:attrType].location != NSNotFound) {
+            } else if ([S_VALUE_TYPES rangeOfString:typeName].location != NSNotFound) {
                 newValue = value;
             } else if ([value isKindOfClass:[NSArray class]] || [value isKindOfClass:[NSDictionary class]]) {
                 newValue = value;
@@ -144,5 +124,34 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
 }
 
 #pragma mark - Private methods
+
++ (id)objectWithJSONObject:(id)jsonObj {
+    id objsArray = nil;
+    Class type = [self class];
+    
+    if ([jsonObj isKindOfClass:[NSArray class]]) {
+        ObjectArray *array = [ObjectArray arrayWithObjectType:type];
+        [array fillInJSONObject:jsonObj];
+        objsArray = array;
+    } else if([jsonObj isKindOfClass:[NSDictionary class]]) {
+        NSObject *objItem = [[type alloc] init];
+        [objItem fillInJSONObject:jsonObj];
+        objsArray = objItem;
+    }
+    return objsArray;
+}
+
+- (NSString *)getTypeNameByAttribute:(objc_property_t) property {
+    NSString *attribute = [NSString stringWithCString:property_getAttributes(property) encoding:NSUTF8StringEncoding];
+    NSRange range = NSMakeRange(1, [attribute rangeOfString:@","].location - 1);
+    NSString *attrType = [attribute substringWithRange:range];
+    return attrType;
+}
+
+- (Class)createObjectByTypeName:(NSString *)name {
+    name = [name substringWithRange:NSMakeRange(2, [name length] - 3)];
+    Class class = NSClassFromString(name);
+    return class;
+}
 
 @end

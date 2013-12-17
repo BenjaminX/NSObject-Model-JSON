@@ -18,31 +18,37 @@
 
 @implementation ObjectArray
 
+- (id)initSelf {
+	self = [super init];
+	if (self) {
+		self.internalDataArray = [[NSMutableArray alloc] init];
+	}
+	return self;
+}
+
 - (id)init {
-    self = [super init];
-    if (self) {
-        self.internalDataArray = [[NSMutableArray alloc] init];
-    }
-    return self;
+	// Forbid calls to –init or +new
+	NSAssert(NO, @"Cannot create instance of Singleton");
+	return nil;
 }
 
 + (id)arrayWithObjectType:(Class)type {
-    ObjectArray *array = [[ObjectArray alloc] init];
-    array.objType = type;
-    return array;
+	ObjectArray *array = [[ObjectArray alloc] initSelf];
+	array.objType = type;
+	return array;
 }
 
 - (void)fillInJSONObject:(NSArray *)jsonObj {
-    Class type = self.objType;
-    for (id item in jsonObj) {
+	Class type = self.objType;
+	for (id item in jsonObj) {
         if ([item isKindOfClass:[NSDictionary class]]) {
-            NSObject *obj = [[type alloc] init];
-            [obj fillInJSONObject:item];
-            [self addObject:obj];
-        } else {
-            [self addObject:item];
-        }
-    }
+			NSObject *obj = [[type alloc] init];
+			[obj fillInJSONObject:item];
+			[self addObject:obj];
+		} else {
+			[self addObject:item];
+		}
+	}
 }
 
 

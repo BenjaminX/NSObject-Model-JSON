@@ -21,9 +21,13 @@
     self.window.backgroundColor = [UIColor whiteColor];
     
     TestModel *model = [[TestModel alloc] init];
-    NSString *json = [model toJSONString];
-    [model toJSONObject];
+    model.title = @"fsdfds.fsdfds";
+    model.articleId = 123345;
+    model.content = @"sfefewfewtetewwfdsf dsfsd fsdfsd";
+    model.categoryId = 312;
     
+    NSString *json = [model toJSONString];
+    TestModel *model2 = [TestModel objectWithJSONString:json];
     [self.window makeKeyAndVisible];
     return YES;
 }

@@ -11,7 +11,6 @@
 @interface NSObject (JSON)
 
 + (id)objectWithJSONString:(NSString *)jsonString;
-+ (id)objectWithJSONObject:(id)jsonObj;
 
 - (void)fillInJSONObject:(NSDictionary *)jsonObj;
 
