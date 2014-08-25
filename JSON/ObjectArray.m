@@ -82,7 +82,7 @@
 }
 
 - (void) replaceObjectAtIndex:(NSUInteger)index withObject:(id)anObject {
-    [self.internalDataArray replaceObjectAtIndex:index withObject:anObject];
+    (self.internalDataArray)[index] = anObject;
 }
 
 /**
@@ -100,7 +100,7 @@
 }
 
 - (id)objectAtIndex:(NSUInteger)index {
-    return [self.internalDataArray objectAtIndex:index];
+    return (self.internalDataArray)[index];
 }
 
 @end

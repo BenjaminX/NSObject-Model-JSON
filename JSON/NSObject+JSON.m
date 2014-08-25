@@ -24,6 +24,22 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
     return obj;
 }
 
++ (id)objectWithJSONObject:(id)jsonObj {
+    id objsArray = nil;
+    Class type = [self class];
+    
+    if ([jsonObj isKindOfClass:[NSArray class]]) {
+        ObjectArray *array = [ObjectArray arrayWithObjectType:type];
+        [array fillInJSONObject:jsonObj];
+        objsArray = array;
+    } else if([jsonObj isKindOfClass:[NSDictionary class]]) {
+        NSObject *objItem = [[type alloc] init];
+        [objItem fillInJSONObject:jsonObj];
+        objsArray = objItem;
+    }
+    return objsArray;
+}
+
 - (void)fillInJSONObject:(NSDictionary *)jsonObj {
     Class class = [self class];
     NSArray *allKeys = [jsonObj allKeys];
@@ -33,7 +49,7 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
         if (property != nil) {
             NSString *typeName = [self getTypeNameByAttribute:property];
             
-            id value = [jsonObj objectForKey:key];
+            id value = jsonObj[key];
             id newValue = nil;
             
             if ([typeName hasPrefix:TYPE_PREFIX]) {
@@ -89,7 +105,7 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
     NSMutableDictionary *jsonDictionary = [NSMutableDictionary dictionary];
     
     Class class = [self class];
-    NSUInteger  counter;
+    unsigned int  counter;
     
     //To root classes.
     while (class != [NSObject class]) {
@@ -97,7 +113,7 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
         
         //Copy properties.
         for (NSUInteger i = 0; i < counter; i++) {
-            NSString *key = [NSString stringWithCString:property_getName(properties[i]) encoding:NSUTF8StringEncoding];
+            NSString *key = @(property_getName(properties[i]));
             id value = [self valueForKey:key];
             id newValue = nil;
             
@@ -116,7 +132,7 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
                 newValue = [NSNull null];
             }
             
-            [jsonDictionary setObject:newValue forKey:key];
+            jsonDictionary[key] = newValue;
         }
         class = class_getSuperclass(class);
     }
@@ -125,24 +141,8 @@ static const NSString *S_VALUE_TYPES = @"cislqCISLQfdB";
 
 #pragma mark - Private methods
 
-+ (id)objectWithJSONObject:(id)jsonObj {
-    id objsArray = nil;
-    Class type = [self class];
-    
-    if ([jsonObj isKindOfClass:[NSArray class]]) {
-        ObjectArray *array = [ObjectArray arrayWithObjectType:type];
-        [array fillInJSONObject:jsonObj];
-        objsArray = array;
-    } else if([jsonObj isKindOfClass:[NSDictionary class]]) {
-        NSObject *objItem = [[type alloc] init];
-        [objItem fillInJSONObject:jsonObj];
-        objsArray = objItem;
-    }
-    return objsArray;
-}
-
 - (NSString *)getTypeNameByAttribute:(objc_property_t) property {
-    NSString *attribute = [NSString stringWithCString:property_getAttributes(property) encoding:NSUTF8StringEncoding];
+    NSString *attribute = @(property_getAttributes(property));
     NSRange range = NSMakeRange(1, [attribute rangeOfString:@","].location - 1);
     NSString *attrType = [attribute substringWithRange:range];
     return attrType;

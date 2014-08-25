@@ -6,11 +6,6 @@
 //
 //
 
-#ifndef NSObjectJSON_NSObjectJSON_h
-#define NSObjectJSON_NSObjectJSON_h
-
 #import "NSObject+JSON.h"
 #import "NSArray+JSON.h"
 #import "ObjectArray.h"
-
-#endif
